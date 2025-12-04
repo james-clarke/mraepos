@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}MRA ePOS v2{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'theme.css' %}">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="app-body">
+
+<header class="top-bar">
+  <div class="top-bar-left">
+    {% block header_left %}{% endblock %}
+  </div>
+  <div class="top-bar-right">
+    {% block header_right %}{% endblock %}
+  </div>
+</header>
+
+<main class="app-main {% block main_class %}{% endblock %}">
+  {% block content %}{% endblock %}
+</main>
+
+</body>
+</html>

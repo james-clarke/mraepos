@@ -1,5 +1,9 @@
 from django.contrib import admin
 
+admin.site.site_header = "MRA POS Administration & Customization"
+admin.site.site_title = "MRA POS Admin"
+admin.site.index_title = "Skate Hut Overview"
+
 # Register your models here.
 from .models import (
     SessionType,

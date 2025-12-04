@@ -287,11 +287,14 @@ def cart_checkout(request):
 
 @login_required
 def financials_view(request):
-    # date filter
     start_date_str = request.GET.get("start_date")
     end_date_str = request.GET.get("end_date")
 
     orders = Order.objects.all()
+
+    # date filters
+    start_date = None
+    end_date = None
 
     if start_date_str:
         try:
@@ -299,8 +302,6 @@ def financials_view(request):
             orders = orders.filter(created_at__date__gte=start_date)
         except ValueError:
             start_date = None
-    else:
-        start_date = None
 
     if end_date_str:
         try:
@@ -308,20 +309,26 @@ def financials_view(request):
             orders = orders.filter(created_at__date__lte=end_date)
         except ValueError:
             end_date = None
-    else:
-        end_date = None
 
-    # totals
+    # total
     overall = orders.aggregate(total_revenue=Sum("total"))
     overall_total = overall["total_revenue"] or 0
 
     # Revenue per day
-    revenue_by_day = (
+    revenue_by_day_qs = (
         orders.annotate(day=TruncDate("created_at"))
         .values("day")
         .annotate(total=Sum("total"))
         .order_by("day")
     )
+    revenue_by_day_all = list(revenue_by_day_qs)
+
+    # 5 most recent days for the table
+    revenue_by_day_recent = revenue_by_day_all[-5:]
+
+    # Lists for Chart.js (use all days)
+    daily_labels = [row["day"].strftime("%Y-%m-%d") for row in revenue_by_day_all]
+    daily_totals = [float(row["total"] or 0) for row in revenue_by_day_all]
 
     # Revenue per session type
     revenue_by_session_type = (
@@ -330,7 +337,7 @@ def financials_view(request):
         .order_by("session_type__name")
     )
 
-    # Revenue per product category (via OrderItem)
+    # Revenue per product category
     items = OrderItem.objects.filter(order__in=orders)
     revenue_by_category = (
         items.values("product__category")
@@ -340,10 +347,12 @@ def financials_view(request):
 
     context = {
         "overall_total": overall_total,
-        "revenue_by_day": revenue_by_day,
+        "revenue_by_day": revenue_by_day_recent,
         "revenue_by_session_type": revenue_by_session_type,
         "revenue_by_category": revenue_by_category,
         "start_date": start_date_str or "",
         "end_date": end_date_str or "",
+        "daily_labels": daily_labels,
+        "daily_totals": daily_totals,
     }
     return render(request, "dashboard/financials.html", context)

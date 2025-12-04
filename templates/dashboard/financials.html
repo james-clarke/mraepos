@@ -1,0 +1,180 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load static humanize %}
+
+{% block title %}MRA ePOS v2 - Financials{% endblock %}
+{% block main_class %}financials-main{% endblock %}
+
+{% block header_left %}
+  <a href="{% url 'dashboard:dashboard' %}">Back to POS</a>
+{% endblock %}
+
+{% block header_right %}
+  <span class="muted">Logged in as <strong>{{ request.user.username }}</strong></span>
+  <a href="{% url 'logout' %}" class="btn btn-ghost">Logout</a>
+{% endblock %}
+
+{% block extra_head %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<h1>Financial overview</h1>
+
+<section class="financials-filter">
+  <label>
+    From:
+    <input type="date" name="start_date" value="{{ start_date }}" form="filter-form">
+  </label>
+  <label>
+    To:
+    <input type="date" name="end_date" value="{{ end_date }}" form="filter-form">
+  </label>
+  <form id="filter-form" method="get" style="display:inline;">
+    <button type="submit" class="btn btn-primary">Apply</button>
+    <a href="{% url 'dashboard:financials' %}">Clear</a>
+  </form>
+</section>
+
+<section class="financials-cards">
+  <div class="card">
+    <h2 class="financial-card-title">Total revenue</h2>
+    <p style="font-size: 1.5rem; font-weight: 700;">
+      £{{ overall_total|floatformat:2|intcomma }}
+    </p>
+    {% if start_date or end_date %}
+      <p class="muted">For selected range</p>
+    {% else %}
+      <p class="muted">All time</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="card" style="margin-bottom: 1rem;">
+  <h2 class="financial-card-title">Daily revenue</h2>
+  <div style="position: relative; width: 100%; height: 260px; margin-top: 0.5rem;">
+    <canvas id="dailyRevenueChart"></canvas>
+  </div>
+</section>
+
+<section>
+  <h2 class="financial-card-title">Revenue by day</h2>
+  <table>
+    <thead>
+    <tr>
+      <th>Date</th>
+      <th>Total revenue</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for row in revenue_by_day %}
+      <tr>
+        <td>{{ row.day }}</td>
+        <td>£{{ row.total|floatformat:2|intcomma }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="2" class="muted">No orders in this period.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2 class="financial-card-title">Revenue by session type</h2>
+  <table>
+    <thead>
+    <tr>
+      <th>Session type</th>
+      <th>Total revenue</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for row in revenue_by_session_type %}
+      <tr>
+        <td>{{ row.session_type__name }}</td>
+        <td>£{{ row.total|floatformat:2|intcomma }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="2" class="muted">No orders in this period.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2 class="financial-card-title">Revenue by product category</h2>
+  <table>
+    <thead>
+    <tr>
+      <th>Category</th>
+      <th>Total revenue</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for row in revenue_by_category %}
+      <tr>
+        <td>{{ row.product__category }}</td>
+        <td>£{{ row.total|floatformat:2|intcomma }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="2" class="muted">No orders in this period.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<script>
+  (function () {
+    const ctx = document.getElementById('dailyRevenueChart');
+    if (!ctx) return;
+
+    const labels = {{ daily_labels|safe }};
+    const data = {{ daily_totals|safe }};
+
+    if (!labels.length) return;
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Daily revenue (£)',
+          data: data,
+          tension: 0.25,
+          fill: true,
+          borderWidth: 2,
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.13)',
+          pointRadius: 3,
+          pointHoverRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => '£' + ctx.parsed.y.toFixed(2)
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#9ca3af' },
+            grid: { display: false }
+          },
+          y: {
+            ticks: {
+              color: '#9ca3af',
+              callback: (value) => '£' + value
+            },
+            grid: { color: 'rgba(55, 65, 81, 0.4)' }
+          }
+        }
+      }
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}MRA POS Admin{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+  <h1 id="site-name">
+    <a href="{% url 'admin:index' %}">MRA ePOS Admin</a>
+  </h1>
+{% endblock %}
+
+{% block nav-global %}
+  <span class="mra-admin-tagline">Midlands Roller Arena – ePOS</span>
+{% endblock %}
