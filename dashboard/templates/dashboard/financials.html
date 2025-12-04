@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Financials</title>
+  <link rel="stylesheet" href="{% static 'dashboard/dashboard.css' %}">
+</head>
+<body>
+<header class="top-bar">
+  <div>
+    <a href="{% url 'dashboard:dashboard' %}">← Back to POS</a>
+  </div>
+  <div class="user-info">
+    Logged in as {{ request.user.username }}
+    <a href="{% url 'logout' %}">Logout</a>
+  </div>
+</header>
+
+<main style="padding: 1rem;">
+  <h1>Financials</h1>
+
+  <section>
+    <h2>Filter by date</h2>
+    <form method="get" class="financials-filter">
+      <label>
+        From:
+        <input type="date" name="start_date" value="{{ start_date }}">
+      </label>
+      <label>
+        To:
+        <input type="date" name="end_date" value="{{ end_date }}">
+      </label>
+      <button type="submit">Apply</button>
+      <a href="{% url 'dashboard:financials' %}">Clear</a>
+    </form>
+  </section>
+
+  <section>
+    <h2>Overall</h2>
+    <p>
+      Total revenue{% if start_date or end_date %} in range{% endif %}: 
+      <strong>£{{ overall_total|floatformat:2 }}</strong>
+    </p>
+  </section>
+
+  <section>
+    <h2>Revenue by day</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Date</th>
+        <th>Total revenue</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for row in revenue_by_day %}
+        <tr>
+          <td>{{ row.day }}</td>
+          <td>£{{ row.total|floatformat:2 }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="2">No orders in this period.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Revenue by session type</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Session type</th>
+        <th>Total revenue</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for row in revenue_by_session_type %}
+        <tr>
+          <td>{{ row.session_type__name }}</td>
+          <td>£{{ row.total|floatformat:2 }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="2">No orders in this period.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Revenue by product category</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Category</th>
+        <th>Total revenue</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for row in revenue_by_category %}
+        <tr>
+          <td>{{ row.product__category }}</td>
+          <td>£{{ row.total|floatformat:2 }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="2">No orders in this period.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>
