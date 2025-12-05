@@ -66,6 +66,14 @@ body.app-body {
   text-decoration: underline;
 }
 
+.top-bar-right .logout-form {
+  margin: 0;
+}
+
+.top-bar-right .logout-form button {
+  padding-inline: 0.9rem; /* optional tweak */
+}
+
 /* Main shell */
 
 .app-main {
